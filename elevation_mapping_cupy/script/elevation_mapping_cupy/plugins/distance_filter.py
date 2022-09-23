@@ -6,7 +6,7 @@ from typing import List
 from .plugin_manager import PluginBase
 
 
-class InlfationFilter(PluginBase):
+class DistanceFilter(PluginBase):
     def __init__(self, cell_n: int = 100, radius: float = 0.5, resolution: float = 0.05, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
         super().__init__()
 
@@ -18,8 +18,8 @@ class InlfationFilter(PluginBase):
         self.height = cell_n
         self.input_layer_name = input_layer_name
 
-        self.inflated = cp.zeros((self.width, self.height))
-        self.inflation_kernel = cp.ElementwiseKernel(
+        self.distances = cp.zeros((self.width, self.height))
+        self.distance_kernel = cp.ElementwiseKernel(
             in_params="raw U map, int32 radius, float32 step_threshold",
             out_params="raw U resultmap",
             preamble=string.Template(
@@ -76,7 +76,7 @@ class InlfationFilter(PluginBase):
                 }
                 """
             ).substitute(resolution=self.resolution),
-            name="inflation_kernel",
+            name="distance_kernel",
         )
 
     def __call__(self, map: cp.ndarray, layer_names: List[str],
@@ -91,17 +91,17 @@ class InlfationFilter(PluginBase):
         else:
             print("layer name {} was not found in neither layers nor plugin layers. Returning zerod layer".format(
                 self.input_layer_name))
-            return self.inflated.copy()
+            return self.distances.copy()
 
-        self.inflated = cp.full((self.width, self.height), float('nan'))
+        self.distances = cp.full((self.width, self.height), float('nan'))
 
         cell_radius = math.ceil(self.params["radius"] / self.resolution)
-        self.inflation_kernel(
+        self.distance_kernel(
             input_layer,
             cp.int32(cell_radius),
             cp.float32(self.params["step_threshold"]),
-            self.inflated,
+            self.distances,
             size=(self.width * self.height),
         )
 
-        return self.inflated.copy()
+        return self.distances.copy()
