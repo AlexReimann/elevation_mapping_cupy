@@ -92,7 +92,7 @@ class ElevationMap(object):
         # Plugins
         self.plugin_manager = PluginManger(cell_n=self.cell_n)
         plugin_config_file = subprocess.getoutput('echo "' + param.plugin_config_file + '"')
-        self.plugin_manager.load_plugin_settings(plugin_config_file)
+        self.plugin_manager.load_plugin_settings(plugin_config_file, resolution=self.resolution)
 
         self.map_initializer = MapInitializer(self.initial_variance, param.initialized_variance, xp=cp, method="points")
 
