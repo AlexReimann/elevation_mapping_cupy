@@ -10,7 +10,7 @@ class InlfationFilter(PluginBase):
         super().__init__()
 
         self.params["radius"] = radius
-        self.step_threshold = step_threshold
+        self.params["step_threshold"] = step_threshold
 
         self.width = cell_n
         self.height = cell_n
@@ -96,7 +96,7 @@ class InlfationFilter(PluginBase):
         self.inflation_kernel(
             input_layer,
             cp.int32(self.params["radius"]),
-            cp.float32(self.step_threshold),
+            cp.float32(self.params["step_threshold"]),
             self.inflated,
             size=(self.width * self.height),
         )
