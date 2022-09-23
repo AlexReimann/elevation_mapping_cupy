@@ -28,6 +28,7 @@ find_package(catkin REQUIRED
   pcl_ros
   pybind11_catkin
   dynamic_reconfigure
+  nav_msgs
 )
 
 catkin_python_setup()
@@ -53,6 +54,7 @@ catkin_package(
     pcl_ros
     pybind11_catkin
     dynamic_reconfigure
+    nav_msgs
 )
 
 include_directories(

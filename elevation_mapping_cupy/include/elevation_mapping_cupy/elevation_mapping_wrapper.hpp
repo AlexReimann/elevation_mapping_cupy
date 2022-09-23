@@ -66,6 +66,8 @@ class ElevationMappingWrapper {
     map_.attr("update_parameter")(plugin_name, parameter, value);
   }
 
+  void updatePath(const std::vector<Eigen::Vector2d>& positions);
+
  private:
   void setParameters(ros::NodeHandle& nh);
   py::object map_;

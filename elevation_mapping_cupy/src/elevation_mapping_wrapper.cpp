@@ -238,4 +238,33 @@ void ElevationMappingWrapper::update_time() {
   map_.attr("update_time")();
 }
 
+void ElevationMappingWrapper::updatePath(const std::vector<Eigen::Vector2d>& positions) {
+
+  RowMatrixXd pos(1, 3);
+  {
+    py::gil_scoped_acquire acquire;
+    map_.attr("get_position")(Eigen::Ref<RowMatrixXd>(pos));
+  }
+  grid_map::GridMap grid_map;
+  grid_map::Position position(pos(0, 0), pos(0, 1));
+  grid_map::Length length(map_length_, map_length_);
+  grid_map.setGeometry(length, resolution_);
+
+  using EigenRowMatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  EigenRowMatrixXi positions_m(positions.size(), 2);
+  int i = 0;
+  for (const Eigen::Vector2d& point : positions) {
+    const Eigen::Vector2d grid_map_position = position - point;
+    grid_map::Index index;
+    grid_map.getIndex(grid_map_position, index);
+
+    positions_m(i, 0) = index.x();
+    positions_m(i, 1) = index.y();
+    ++i;
+  }
+
+  py::gil_scoped_acquire acquire;
+  map_.attr("update_path")(positions_m);
+}
+
 }  // namespace elevation_mapping_cupy

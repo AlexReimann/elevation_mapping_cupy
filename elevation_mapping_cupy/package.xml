@@ -22,5 +22,6 @@
   <depend>pcl_ros</depend>
   <depend>pybind11_catkin</depend>
   <depend>dynamic_reconfigure</depend>
+  <depend>nav_msgs</depend>
 
 </package>

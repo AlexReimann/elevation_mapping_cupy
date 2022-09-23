@@ -32,6 +32,8 @@ class PluginBase(ABC):
             The parameter of callback
         """
         self.params = {}
+        self.uses_path = False
+        self.path = None
 
     def __call__(
         self,
@@ -150,6 +152,11 @@ class PluginManger(object):
         plugin_index = self.get_plugin_index_with_name(plugin_name)
         if plugin_index is not None:
             self.plugins[plugin_index].update_parameter(parameter, value)
+
+    def update_path(self, plugin_name: str, path):
+        plugin_index = self.get_plugin_index_with_name(plugin_name)
+        if plugin_index is not None and self.plugins[plugin_index].uses_path:
+            self.plugins[plugin_index].path = path
 
 
 if __name__ == "__main__":
