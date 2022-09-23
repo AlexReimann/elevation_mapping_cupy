@@ -20,7 +20,7 @@ class DistanceFilter(PluginBase):
 
         self.distances = cp.zeros((self.width, self.height))
         self.distance_kernel = cp.ElementwiseKernel(
-            in_params="raw U map, int32 radius, float32 step_threshold",
+            in_params="raw U map, int32 radius, float32 max_distance, float32 step_threshold",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -37,10 +37,10 @@ class DistanceFilter(PluginBase):
                     return layer * layer_n + relative_idx;
                 }
 
-                __device__ bool is_inside(int idx)
+                __device__ bool is_inside(int idx, int dx, int dy)
                 {
-                    int idx_x = idx / ${width};
-                    int idx_y = idx % ${width};
+                    int idx_x = (idx % ${width}) + dx;
+                    int idx_y = (idx / ${width}) + dy;
                     if (idx_x <= 0 || idx_x >= ${width} - 1)
                     {
                         return false;
@@ -59,13 +59,23 @@ class DistanceFilter(PluginBase):
                 {
                   for (int dx = -radius; dx <= radius; ++dx)
                   {
+                    if (!is_inside(i, dx, dy))
+                    {
+                      continue;
+                    }
+
                     int idx = get_relative_map_idx(i, dx, dy, 0);
-                    if (!is_inside(idx) || map[idx] < step_threshold)
+                    if (map[idx] < step_threshold)
                     {
                       continue;
                     }
 
                     U distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
+                    if (distance > max_distance)
+                    {
+                      continue;
+                    }
+
                     U& center_value = resultmap[get_map_idx(i, 0)];
 
                     if (isnan(center_value) || center_value > distance)
@@ -99,6 +109,7 @@ class DistanceFilter(PluginBase):
         self.distance_kernel(
             input_layer,
             cp.int32(cell_radius),
+            cp.float32(self.params["radius"]),
             cp.float32(self.params["step_threshold"]),
             self.distances,
             size=(self.width * self.height),

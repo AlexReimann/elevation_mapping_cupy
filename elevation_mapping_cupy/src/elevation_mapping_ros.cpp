@@ -196,6 +196,9 @@ void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_
   case 2:
     map_.update_parameter("distance_filter", "step_threshold", config.distance_step_threshold);
     break;
+  case 3:
+    map_.update_parameter("path_distance_filter", "radius", config.path_distance_radius);
+    break;
 
   default:
     break;
