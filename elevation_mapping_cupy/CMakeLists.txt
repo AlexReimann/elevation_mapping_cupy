@@ -33,6 +33,7 @@ find_package(catkin REQUIRED
 catkin_python_setup()
 
 generate_dynamic_reconfigure_options(
+  config/Costs.cfg
 )
 
 catkin_package(

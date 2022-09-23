@@ -31,6 +31,7 @@ class PluginBase(ABC):
         plugin_params : PluginParams
             The parameter of callback
         """
+        self.params = {}
 
     def __call__(
         self,
@@ -52,6 +53,9 @@ class PluginBase(ABC):
         You can also access to the other plugins' layer with plugin_layers and plugin_layer_names
         """
         pass
+
+    def update_parameter(self, parameter_name, value):
+        self.params[parameter_name] = value
 
 
 class PluginManger(object):
@@ -139,6 +143,11 @@ class PluginManger(object):
         idx = self.get_layer_index_with_name(name)
         if idx is not None:
             return self.plugin_params[idx]
+
+    def update_parameter(self, plugin_name: str, parameter: str, value):
+        plugin_index = self.get_plugin_index_with_name(plugin_name)
+        if plugin_index is not None:
+            self.plugins[plugin_index].update_parameter(parameter, value)
 
 
 if __name__ == "__main__":

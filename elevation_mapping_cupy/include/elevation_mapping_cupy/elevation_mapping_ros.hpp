@@ -7,6 +7,7 @@
 
 // STL
 #include <iostream>
+#include <memory>
 #include <mutex>
 
 // Eigen
@@ -16,6 +17,7 @@
 #include <pybind11_catkin/pybind11/embed.h>  // everything needed for embedding
 
 // ROS
+#include <dynamic_reconfigure/server.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -40,6 +42,7 @@
 #include <elevation_map_msgs/Initialize.h>
 
 #include "elevation_mapping_cupy/elevation_mapping_wrapper.hpp"
+#include "elevation_mapping_cupy/CostsConfig.h"
 
 namespace py = pybind11;
 
@@ -52,6 +55,7 @@ class ElevationMappingNode {
  private:
   void readParameters();
   void setupMapPublishers();
+  void reconfigureCostsCallback(CostsConfig& config, uint32_t level);
   void pointcloudCallback(const sensor_msgs::PointCloud2& cloud);
   void publishAsPointCloud(const grid_map::GridMap& map) const;
   bool getSubmap(grid_map_msgs::GetGridMap::Request& request, grid_map_msgs::GetGridMap::Response& response);
@@ -96,6 +100,8 @@ class ElevationMappingNode {
   std::string mapFrameId_;
   std::string correctedMapFrameId_;
   std::string baseFrameId_;
+
+  std::unique_ptr<dynamic_reconfigure::Server<CostsConfig>> dyn_reconf_server_;
 
   // map topics info
   std::vector<std::vector<std::string>> map_topics_;

@@ -9,6 +9,7 @@ class InlfationFilter(PluginBase):
     def __init__(self, cell_n: int = 100, radius: int = 1, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
         super().__init__()
 
+        self.params["radius"] = radius
         self.step_threshold = step_threshold
 
         self.width = cell_n
@@ -17,7 +18,7 @@ class InlfationFilter(PluginBase):
 
         self.inflated = cp.zeros((self.width, self.height))
         self.inflation_kernel = cp.ElementwiseKernel(
-            in_params="raw U map, float32 step_threshold",
+            in_params="raw U map, int32 radius, float32 step_threshold",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -52,9 +53,9 @@ class InlfationFilter(PluginBase):
             ).substitute(width=self.width, height=self.height),
             operation=string.Template(
                 """
-                for (int dy = -${radius}; dy <= ${radius}; ++dy)
+                for (int dy = -radius; dy <= radius; ++dy)
                 {
-                  for (int dx = -${radius}; dx <= ${radius}; ++dx)
+                  for (int dx = -radius; dx <= radius; ++dx)
                   {
                     int idx = get_relative_map_idx(i, dx, dy, 0);
                     if (!is_inside(idx) || map[idx] < step_threshold)
@@ -72,7 +73,7 @@ class InlfationFilter(PluginBase):
                   }
                 }
                 """
-            ).substitute(radius=radius),
+            ).substitute(),
             name="inflation_kernel",
         )
 
@@ -94,6 +95,7 @@ class InlfationFilter(PluginBase):
 
         self.inflation_kernel(
             input_layer,
+            cp.int32(self.params["radius"]),
             cp.float32(self.step_threshold),
             self.inflated,
             size=(self.width * self.height),

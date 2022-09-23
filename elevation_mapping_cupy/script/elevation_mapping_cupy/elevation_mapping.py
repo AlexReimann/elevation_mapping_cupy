@@ -306,6 +306,9 @@ class ElevationMap(object):
     def update_time(self):
         self.elevation_map[4] += self.param.time_interval
 
+    def update_parameter(self, plugin_name, parameter, value):
+        self.plugin_manager.update_parameter(plugin_name=plugin_name, parameter=parameter, value=value)
+
     def update_upper_bound_with_valid_elevation(self):
         mask = self.elevation_map[2] > 0.5
         self.elevation_map[5] = cp.where(mask, self.elevation_map[0], self.elevation_map[5])
