@@ -124,6 +124,8 @@ ElevationMappingNode::ElevationMappingNode(ros::NodeHandle& nh)
   dyn_reconf_server_ = std::make_unique<dynamic_reconfigure::Server<CostsConfig>>(nh_);
   dyn_reconf_server_->setCallback([this](auto&& config, auto&& level) { reconfigureCostsCallback(config, level); });
 
+  pathSub_ = nh_.subscribe("path", 1, &ElevationMappingNode::pathCallback, this);
+
   if (updateVarianceFps > 0) {
     double duration = 1.0 / (updateVarianceFps + 0.00001);
     updateVarianceTimer_ = nh_.createTimer(ros::Duration(duration), &ElevationMappingNode::updateVariance, this, false, true);
@@ -275,6 +277,17 @@ void ElevationMappingNode::pointcloudCallback(const sensor_msgs::PointCloud2& cl
   ROS_DEBUG_THROTTLE(1.0, "orientationError: %f ", orientationError);
   // This is used for publishing as statistics.
   pointCloudProcessCounter_++;
+}
+
+void ElevationMappingNode::pathCallback(const nav_msgs::PathConstPtr& path) {
+  std::vector<Eigen::Vector2d> eigen_path;
+
+  for (const auto pose : path->poses) {
+    const geometry_msgs::Point& position = pose.pose.position;
+    eigen_path.emplace_back(position.x, position.y);
+  }
+
+  map_.updatePath(eigen_path);
 }
 
 void ElevationMappingNode::updatePose(const ros::TimerEvent&) {

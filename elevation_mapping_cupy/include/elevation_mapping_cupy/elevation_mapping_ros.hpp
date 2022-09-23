@@ -19,6 +19,7 @@
 // ROS
 #include <dynamic_reconfigure/server.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <std_srvs/Empty.h>
@@ -57,6 +58,7 @@ class ElevationMappingNode {
   void setupMapPublishers();
   void reconfigureCostsCallback(CostsConfig& config, uint32_t level);
   void pointcloudCallback(const sensor_msgs::PointCloud2& cloud);
+  void pathCallback(const nav_msgs::PathConstPtr& path);
   void publishAsPointCloud(const grid_map::GridMap& map) const;
   bool getSubmap(grid_map_msgs::GetGridMap::Request& request, grid_map_msgs::GetGridMap::Response& response);
   bool checkSafety(elevation_map_msgs::CheckSafety::Request& request, elevation_map_msgs::CheckSafety::Response& response);
@@ -77,6 +79,7 @@ class ElevationMappingNode {
   visualization_msgs::Marker vectorToArrowMarker(const Eigen::Vector3d& start, const Eigen::Vector3d& end, const int id) const;
   ros::NodeHandle nh_;
   std::vector<ros::Subscriber> pointcloudSubs_;
+  ros::Subscriber pathSub_;
   std::vector<ros::Publisher> mapPubs_;
   tf::TransformBroadcaster tfBroadcaster_;
   ros::Publisher alivePub_;
