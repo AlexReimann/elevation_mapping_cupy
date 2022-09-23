@@ -1,4 +1,5 @@
 import cupy as cp
+import math
 import string
 from typing import List
 
@@ -6,7 +7,7 @@ from .plugin_manager import PluginBase
 
 
 class InlfationFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: int = 1, resolution: float = 0.05, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
+    def __init__(self, cell_n: int = 100, radius: float = 0.5, resolution: float = 0.05, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
         super().__init__()
 
         self.params["radius"] = radius
@@ -94,9 +95,10 @@ class InlfationFilter(PluginBase):
 
         self.inflated = cp.full((self.width, self.height), float('nan'))
 
+        cell_radius = math.ceil(self.params["radius"] / self.resolution)
         self.inflation_kernel(
             input_layer,
-            cp.int32(self.params["radius"]),
+            cp.int32(cell_radius),
             cp.float32(self.params["step_threshold"]),
             self.inflated,
             size=(self.width * self.height),
