@@ -60,6 +60,12 @@ class ElevationMappingWrapper {
   void pointCloudToMatrix(const pcl::PointCloud<pcl::PointXYZ>::Ptr& pointCloud, RowMatrixXd& points);
   void addNormalColorLayer(grid_map::GridMap& map);
 
+  template <class T>
+  void update_parameter(const std::string& plugin_name, const std::string& parameter, const T value) {
+    py::gil_scoped_acquire acquire;
+    map_.attr("update_parameter")(plugin_name, parameter, value);
+  }
+
  private:
   void setParameters(ros::NodeHandle& nh);
   py::object map_;

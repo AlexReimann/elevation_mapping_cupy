@@ -121,6 +121,9 @@ ElevationMappingNode::ElevationMappingNode(ros::NodeHandle& nh)
   setPublishPointService_ = nh_.advertiseService("set_publish_points", &ElevationMappingNode::setPublishPoint, this);
   checkSafetyService_ = nh_.advertiseService("check_safety", &ElevationMappingNode::checkSafety, this);
 
+  dyn_reconf_server_ = std::make_unique<dynamic_reconfigure::Server<CostsConfig>>(nh_);
+  dyn_reconf_server_->setCallback([this](auto&& config, auto&& level) { reconfigureCostsCallback(config, level); });
+
   if (updateVarianceFps > 0) {
     double duration = 1.0 / (updateVarianceFps + 0.00001);
     updateVarianceTimer_ = nh_.createTimer(ros::Duration(duration), &ElevationMappingNode::updateVariance, this, false, true);
@@ -179,6 +182,20 @@ void ElevationMappingNode::setupMapPublishers() {
     double duration = 1.0 / (fps + 0.00001);
     mapTimers_.push_back(nh_.createTimer(ros::Duration(duration), cb));
   }
+}
+
+void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_t level) {
+
+  switch (level)
+  {
+  case 1:
+    map_.update_parameter("inflation_filter", "radius", config.inflation_radius);
+    break;
+
+  default:
+    break;
+  }
+
 }
 
 void ElevationMappingNode::publishMapOfIndex(int index) {
