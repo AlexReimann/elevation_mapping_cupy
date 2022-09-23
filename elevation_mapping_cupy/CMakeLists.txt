@@ -27,6 +27,12 @@ find_package(catkin REQUIRED
   grid_map_ros
   pcl_ros
   pybind11_catkin
+  dynamic_reconfigure
+)
+
+catkin_python_setup()
+
+generate_dynamic_reconfigure_options(
 )
 
 catkin_package(
@@ -45,6 +51,7 @@ catkin_package(
     grid_map_ros
     pcl_ros
     pybind11_catkin
+    dynamic_reconfigure
 )
 
 include_directories(
@@ -59,11 +66,11 @@ add_library(elevation_mapping_ros
     src/elevation_mapping_ros.cpp)
 
 target_link_libraries(elevation_mapping_ros ${PYTHON_LIBRARIES} ${catkin_LIBRARIES})
+add_dependencies(elevation_mapping_ros ${PROJECT_NAME}_gencfg)
 
 add_executable(elevation_mapping_node src/elevation_mapping_node.cpp)
 target_link_libraries(elevation_mapping_node elevation_mapping_ros)
 
-catkin_python_setup()
 
 install(
   TARGETS elevation_mapping_ros elevation_mapping_node
