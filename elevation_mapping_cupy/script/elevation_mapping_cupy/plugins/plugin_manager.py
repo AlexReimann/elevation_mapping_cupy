@@ -98,7 +98,7 @@ class PluginManger(object):
                     )
                 )
             extra_params.append(v["extra_params"])
-            if k == "inflation_filter":
+            if k == "distance_filter":
                 extra_params[-1]["resolution"] = resolution
         self.init(plugin_params, extra_params)
         print("Loaded plugins are ", *self.plugin_names)

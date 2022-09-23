@@ -189,10 +189,10 @@ void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_
   switch (level)
   {
   case 1:
-    map_.update_parameter("inflation_filter", "radius", config.inflation_radius);
+    map_.update_parameter("distance_filter", "radius", config.distance_radius);
     break;
   case 2:
-    map_.update_parameter("inflation_filter", "step_threshold", config.inflation_step_threshold);
+    map_.update_parameter("distance_filter", "step_threshold", config.distance_step_threshold);
     break;
 
   default:
