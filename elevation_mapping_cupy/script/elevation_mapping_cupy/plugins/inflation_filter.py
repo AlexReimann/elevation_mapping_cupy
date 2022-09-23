@@ -6,10 +6,11 @@ from .plugin_manager import PluginBase
 
 
 class InlfationFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: int = 1, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
+    def __init__(self, cell_n: int = 100, radius: int = 1, resolution: float = 0.05, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
         super().__init__()
 
         self.params["radius"] = radius
+        self.resolution = resolution
         self.params["step_threshold"] = step_threshold
 
         self.width = cell_n
@@ -63,7 +64,7 @@ class InlfationFilter(PluginBase):
                       continue;
                     }
 
-                    U distance = sqrt((float)(dy*dy) + (float)(dx*dx));
+                    U distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
                     U& center_value = resultmap[get_map_idx(i, 0)];
 
                     if (isnan(center_value) || center_value > distance)
@@ -73,7 +74,7 @@ class InlfationFilter(PluginBase):
                   }
                 }
                 """
-            ).substitute(),
+            ).substitute(resolution=self.resolution),
             name="inflation_kernel",
         )
 

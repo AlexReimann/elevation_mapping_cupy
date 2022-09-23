@@ -82,7 +82,7 @@ class PluginManger(object):
         self.layer_names = self.get_layer_names()
         self.plugin_names = self.get_plugin_names()
 
-    def load_plugin_settings(self, file_path: str):
+    def load_plugin_settings(self, file_path: str, resolution: float):
         print("Start loading plugins...")
         cfg = YAML().load(open(file_path, "r"))
         plugin_params = []
@@ -98,6 +98,8 @@ class PluginManger(object):
                     )
                 )
             extra_params.append(v["extra_params"])
+            if k == "inflation_filter":
+                extra_params[-1]["resolution"] = resolution
         self.init(plugin_params, extra_params)
         print("Loaded plugins are ", *self.plugin_names)
 
