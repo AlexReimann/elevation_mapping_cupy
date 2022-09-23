@@ -21,5 +21,6 @@
   <depend>grid_map_ros</depend>
   <depend>pcl_ros</depend>
   <depend>pybind11_catkin</depend>
+  <depend>dynamic_reconfigure</depend>
 
 </package>
