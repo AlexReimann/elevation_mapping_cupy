@@ -57,6 +57,8 @@ class PathDistanceFilter(PluginBase):
             ).substitute(width=self.width, height=self.height),
             operation=string.Template(
                 """
+                U& center_value = resultmap[get_map_idx(i, 0)];
+
                 for (int dy = -radius; dy <= radius; ++dy)
                 {
                   for (int dx = -radius; dx <= radius; ++dx)
@@ -66,25 +68,28 @@ class PathDistanceFilter(PluginBase):
                       continue;
                     }
 
-                    int idx = get_relative_map_idx(i, dx, dy, 0);
+                    const int idx = get_relative_map_idx(i, dx, dy, 0);
                     if (map[idx] != 1.0)
                     {
                       continue;
                     }
 
-                    U distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
+                    const float distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
                     if (distance > max_distance)
                     {
                       continue;
                     }
-
-                    U& center_value = resultmap[get_map_idx(i, 0)];
 
                     if (isnan(center_value) || center_value > distance)
                     {
                       center_value = distance;
                     }
                   }
+                }
+
+                if (isnan(center_value))
+                {
+                  center_value = 0.0F;
                 }
                 """
             ).substitute(resolution=self.resolution),
