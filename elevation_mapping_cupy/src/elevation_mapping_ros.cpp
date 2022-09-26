@@ -200,6 +200,16 @@ void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_
     map_.update_parameter("path_distance_filter", "radius", config.path_distance_radius);
     break;
 
+  case 10:
+    map_.update_parameter("cost_filter", "obstacle_cost_scaling", config.obstacle_cost_scaling);
+    break;
+  case 11:
+    map_.update_parameter("cost_filter", "path_distance_cost_scaling", config.path_distance_cost_scaling);
+    break;
+  case 12:
+    map_.update_parameter("cost_filter", "goal_distance_cost_scaling", config.goal_distance_cost_scaling);
+    break;
+
   default:
     break;
   }
