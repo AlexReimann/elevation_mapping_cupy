@@ -34,6 +34,8 @@ class PluginBase(ABC):
         self.params = {}
         self.uses_path = False
         self.path = None
+        self.uses_goal = False
+        self.goal = None
 
     def __call__(
         self,
@@ -103,7 +105,7 @@ class PluginManger(object):
                 extra_params.append(v["extra_params"])
             else:
                 extra_params.append({})
-            if k == "distance_filter":
+            if k == "distance_filter" or k == "goal_distance_filter":
                 extra_params[-1]["resolution"] = resolution
         self.init(plugin_params, extra_params)
         print("Loaded plugins are ", *self.plugin_names)
@@ -160,6 +162,11 @@ class PluginManger(object):
         plugin_index = self.get_plugin_index_with_name(plugin_name)
         if plugin_index is not None and self.plugins[plugin_index].uses_path:
             self.plugins[plugin_index].path = path
+
+    def update_goal(self, plugin_name: str, goal):
+        plugin_index = self.get_plugin_index_with_name(plugin_name)
+        if plugin_index is not None and self.plugins[plugin_index].uses_goal:
+            self.plugins[plugin_index].goal = goal
 
 
 if __name__ == "__main__":
