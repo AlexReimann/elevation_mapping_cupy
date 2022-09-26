@@ -246,14 +246,13 @@ void ElevationMappingWrapper::updatePath(const std::vector<Eigen::Vector2d>& pos
     map_.attr("get_position")(Eigen::Ref<RowMatrixXd>(pos));
   }
   grid_map::GridMap grid_map;
-  grid_map::Position position(pos(0, 0), pos(0, 1));
-  grid_map::Length length(map_length_, map_length_);
+  const grid_map::Position map_position(pos(0, 0), pos(0, 1));
+  const grid_map::Length length(map_length_, map_length_);
   grid_map.setGeometry(length, resolution_);
 
-
   std::vector<grid_map::Index> inside_indices;
-  for (const Eigen::Vector2d& point : positions) {
-    const Eigen::Vector2d grid_map_position = position - point;
+  for (const Eigen::Vector2d& position : positions) {
+    const Eigen::Vector2d grid_map_position = map_position - position;
     grid_map::Index index;
     if (grid_map.getIndex(grid_map_position, index)) {
       inside_indices.push_back(index);
@@ -268,9 +267,11 @@ void ElevationMappingWrapper::updatePath(const std::vector<Eigen::Vector2d>& pos
     positions_m(i, 1) = index.y();
     ++i;
   }
+  const Eigen::Vector2d goal_position = map_position - positions.back();
 
   py::gil_scoped_acquire acquire;
   map_.attr("update_path")(positions_m);
+  map_.attr("update_goal")(Eigen::Vector2f(goal_position.y(), goal_position.x())); // flip for numpy data order
 }
 
 }  // namespace elevation_mapping_cupy

@@ -313,6 +313,10 @@ class ElevationMap(object):
         for plugin_name in self.plugin_manager.get_plugin_names():
             self.plugin_manager.update_path(plugin_name, path)
 
+    def update_goal(self, goal):
+        for plugin_name in self.plugin_manager.get_plugin_names():
+            self.plugin_manager.update_goal(plugin_name, goal)
+
     def update_upper_bound_with_valid_elevation(self):
         mask = self.elevation_map[2] > 0.5
         self.elevation_map[5] = cp.where(mask, self.elevation_map[0], self.elevation_map[5])
