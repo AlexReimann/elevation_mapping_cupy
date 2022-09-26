@@ -89,7 +89,7 @@ class PathDistanceFilter(PluginBase):
 
                 if (isnan(center_value))
                 {
-                  center_value = 0.0F;
+                  center_value = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
                 }
                 """
             ).substitute(resolution=self.resolution),
