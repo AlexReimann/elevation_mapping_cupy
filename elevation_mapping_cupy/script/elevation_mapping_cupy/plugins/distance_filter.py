@@ -13,6 +13,7 @@ class DistanceFilter(PluginBase):
         self.params["radius"] = radius
         self.resolution = resolution
         self.params["step_threshold"] = step_threshold
+        self.params["min_distance"] = 0.0
 
         self.width = cell_n
         self.height = cell_n
@@ -20,7 +21,7 @@ class DistanceFilter(PluginBase):
 
         self.distances = cp.zeros((self.width, self.height))
         self.distance_kernel = cp.ElementwiseKernel(
-            in_params="raw U map, int32 radius, float32 max_distance, float32 step_threshold",
+            in_params="raw U map, int32 radius, float32 max_distance, float32 step_threshold, float32 min_distance",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -85,6 +86,16 @@ class DistanceFilter(PluginBase):
                   }
                 }
 
+                if (center_value < min_distance)
+                {
+                  center_value = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
+                }
+
+                center_value = max_distance - center_value; // invert to lower values if farther
+                center_value += min_distance; // offset to min
+
+                center_value = exp(center_value) - 1.0F;
+
                 if (isnan(center_value))
                 {
                   center_value = 0.0F;
@@ -116,6 +127,7 @@ class DistanceFilter(PluginBase):
             cp.int32(cell_radius),
             cp.float32(self.params["radius"]),
             cp.float32(self.params["step_threshold"]),
+            cp.float32(self.params["min_distance"]),
             self.distances,
             size=(self.width * self.height),
         )
