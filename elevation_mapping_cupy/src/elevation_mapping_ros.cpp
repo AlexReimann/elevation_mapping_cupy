@@ -191,23 +191,27 @@ void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_
   switch (level)
   {
   case 1:
-    map_.update_parameter("distance_filter", "radius", config.distance_radius);
+    map_.update_parameter("cost_filter", "obstacle_cost_scaling", config.obstacle_cost_scaling);
     break;
   case 2:
-    map_.update_parameter("distance_filter", "step_threshold", config.distance_step_threshold);
+    map_.update_parameter("cost_filter", "path_distance_cost_scaling", config.path_distance_cost_scaling);
     break;
   case 3:
-    map_.update_parameter("path_distance_filter", "radius", config.path_distance_radius);
+    map_.update_parameter("cost_filter", "goal_distance_cost_scaling", config.goal_distance_cost_scaling);
     break;
 
   case 10:
-    map_.update_parameter("cost_filter", "obstacle_cost_scaling", config.obstacle_cost_scaling);
+    map_.update_parameter("distance_filter", "radius", config.distance_radius);
     break;
   case 11:
-    map_.update_parameter("cost_filter", "path_distance_cost_scaling", config.path_distance_cost_scaling);
+    map_.update_parameter("distance_filter", "step_threshold", config.distance_step_threshold);
     break;
   case 12:
-    map_.update_parameter("cost_filter", "goal_distance_cost_scaling", config.goal_distance_cost_scaling);
+    map_.update_parameter("distance_filter", "min_distance", config.distance_min);
+    break;
+
+  case 20:
+    map_.update_parameter("path_distance_filter", "radius", config.path_distance_radius);
     break;
 
   default:
