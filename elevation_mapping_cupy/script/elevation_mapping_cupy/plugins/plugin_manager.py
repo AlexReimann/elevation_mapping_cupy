@@ -99,7 +99,10 @@ class PluginManger(object):
                         is_height_layer=v["is_height_layer"],
                     )
                 )
-            extra_params.append(v["extra_params"])
+            if "extra_params" in v:
+                extra_params.append(v["extra_params"])
+            else:
+                extra_params.append({})
             if k == "distance_filter":
                 extra_params[-1]["resolution"] = resolution
         self.init(plugin_params, extra_params)
