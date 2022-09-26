@@ -250,14 +250,20 @@ void ElevationMappingWrapper::updatePath(const std::vector<Eigen::Vector2d>& pos
   grid_map::Length length(map_length_, map_length_);
   grid_map.setGeometry(length, resolution_);
 
-  using EigenRowMatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-  EigenRowMatrixXi positions_m(positions.size(), 2);
-  int i = 0;
+
+  std::vector<grid_map::Index> inside_indices;
   for (const Eigen::Vector2d& point : positions) {
     const Eigen::Vector2d grid_map_position = position - point;
     grid_map::Index index;
-    grid_map.getIndex(grid_map_position, index);
+    if (grid_map.getIndex(grid_map_position, index)) {
+      inside_indices.push_back(index);
+    }
+  }
 
+  using EigenRowMatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  EigenRowMatrixXi positions_m(inside_indices.size(), 2);
+  int i = 0;
+  for (const auto& index : inside_indices) {
     positions_m(i, 0) = index.x();
     positions_m(i, 1) = index.y();
     ++i;
