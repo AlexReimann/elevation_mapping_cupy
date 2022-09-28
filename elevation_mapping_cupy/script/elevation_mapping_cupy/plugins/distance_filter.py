@@ -90,11 +90,13 @@ class DistanceFilter(PluginBase):
                 {
                   center_value = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
                 }
+                else
+                {
+                  center_value = max_distance - center_value; // invert to lower values if farther
+                  center_value += min_distance; // offset to min
 
-                center_value = max_distance - center_value; // invert to lower values if farther
-                center_value += min_distance; // offset to min
-
-                center_value = exp(center_value) - 1.0F;
+                  center_value = exp(center_value) - 1.0F;
+                }
 
                 if (isnan(center_value))
                 {
