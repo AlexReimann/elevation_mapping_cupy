@@ -7,13 +7,14 @@ from .plugin_manager import PluginBase
 
 
 class GoalDistanceFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, **kwargs):
+    def __init__(self, cell_n: int = 100, obstacle_cost_scaling: float = 1.0,
+      path_distance_cost_scaling: float = 1.0, goal_distance_cost_scaling: float = 1.0, **kwargs):
         super().__init__()
 
         # Set by dynamic reconfigure
-        self.params["obstacle_cost_scaling"] = 1.0
-        self.params["path_distance_cost_scaling"] = 1.0
-        self.params["goal_distance_cost_scaling"] = 1.0
+        self.params["obstacle_cost_scaling"] = obstacle_cost_scaling
+        self.params["path_distance_cost_scaling"] = path_distance_cost_scaling
+        self.params["goal_distance_cost_scaling"] = goal_distance_cost_scaling
 
         self.costs = cp.zeros((cell_n, cell_n))
 
