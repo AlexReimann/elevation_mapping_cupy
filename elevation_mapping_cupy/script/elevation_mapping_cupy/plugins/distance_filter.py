@@ -91,17 +91,18 @@ class DistanceFilter(PluginBase):
                 {
                   center_value = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
                 }
-                else
-                {
-                  center_value = max_distance - center_value; // invert to lower values if farther
-                  center_value += min_distance; // offset to min
-
-                  center_value = exp(center_value) - 1.0F;
-                }
-
-                if (isnan(center_value))
+                else if (isnan(center_value))
                 {
                   center_value = 0.0F;
+                }
+                else
+                {
+                  const float distance_range = max_distance - min_distance;
+                  const float normalized_distance = (center_value - min_distance) / distance_range;
+
+                  const float midpoint = 0.4F;
+                  const float steepness = 10.0F;
+                  center_value = 1.0F - (1.0F / ( 1.0F + exp(-steepness*(normalized_distance - midpoint)) ));
                 }
                 """
             ).substitute(resolution=self.resolution),
