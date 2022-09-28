@@ -7,13 +7,14 @@ from .plugin_manager import PluginBase
 
 
 class DistanceFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: float = 0.5, resolution: float = 0.05, step_threshold: float = 0.0, input_layer_name: str = "elevation", **kwargs):
+    def __init__(self, cell_n: int = 100, radius: float = 0.5, resolution: float = 0.05, step_threshold: float = 0.0,
+      min_distance: float = 0.34, input_layer_name: str = "elevation", **kwargs):
         super().__init__()
 
         self.params["radius"] = radius
         self.resolution = resolution
         self.params["step_threshold"] = step_threshold
-        self.params["min_distance"] = 0.0
+        self.params["min_distance"] = min_distance
 
         self.width = cell_n
         self.height = cell_n
