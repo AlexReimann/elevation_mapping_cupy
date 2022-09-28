@@ -22,7 +22,7 @@ class PathDistanceFilter(PluginBase):
         self.path_map = cp.zeros((self.width, self.height))
 
         self.path_distance_kernel = cp.ElementwiseKernel(
-            in_params="raw U map, int32 radius, float32 max_distance",
+            in_params="raw U path_map, int32 radius, float32 max_distance, float32 max_path_index",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -69,7 +69,8 @@ class PathDistanceFilter(PluginBase):
                     }
 
                     const int idx = get_relative_map_idx(i, dx, dy, 0);
-                    if (map[idx] != 1.0)
+                    const float map_path_index = path_map[idx];
+                    if (isnan(map_path_index))
                     {
                       continue;
                     }
@@ -80,9 +81,12 @@ class PathDistanceFilter(PluginBase):
                       continue;
                     }
 
-                    if (isnan(center_value) || center_value > distance)
+                    const float normalized_distance = distance / max_distance;
+                    const float value = normalized_distance + map_path_index;
+
+                    if (isnan(center_value) || center_value > value)
                     {
-                      center_value = distance;
+                      center_value = value;
                     }
                   }
                 }
@@ -104,16 +108,17 @@ class PathDistanceFilter(PluginBase):
 
         self.distances = cp.full((self.width, self.height), float('nan'))
 
-        self.path_map = cp.zeros((self.width, self.height))
+        self.path_map = cp.full((self.width, self.height), float('nan'))
 
-        for index in self.path:
-            self.path_map[index[0], index[1]] = 1.0
+        for idx, path_point_index in enumerate(self.path):
+            self.path_map[path_point_index[0], path_point_index[1]] = float(len(self.path) - idx - 1)
 
         cell_radius = math.ceil(self.params["radius"] / self.resolution)
         self.path_distance_kernel(
             self.path_map,
             cp.int32(cell_radius),
             cp.float32(self.params["radius"]),
+            cp.float32(len(self.path) - 1),
             self.distances,
             size=(self.width * self.height),
         )
