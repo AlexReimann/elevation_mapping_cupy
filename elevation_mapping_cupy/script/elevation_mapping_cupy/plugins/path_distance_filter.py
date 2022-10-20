@@ -7,12 +7,13 @@ from .plugin_manager import PluginBase
 
 
 class PathDistanceFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: float = 2.0, resolution: float = 0.05, **kwargs):
+    def __init__(self, cell_n: int = 100, radius: float = 2.0, distance_cost_scaling: float = 1.0, resolution: float = 0.05, **kwargs):
         super().__init__()
 
         self.uses_path = True
 
         self.params["radius"] = radius
+        self.params["distance_cost_scaling"] = distance_cost_scaling
         self.resolution = resolution
 
         self.width = cell_n
@@ -22,7 +23,7 @@ class PathDistanceFilter(PluginBase):
         self.path_map = cp.zeros((self.width, self.height))
 
         self.path_distance_kernel = cp.ElementwiseKernel(
-            in_params="raw U path_map, int32 radius, float32 max_distance",
+            in_params="raw U path_map, int32 radius, float32 max_distance, float32 distance_cost_scaling",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -80,7 +81,7 @@ class PathDistanceFilter(PluginBase):
                     {
                       continue;
                     }
-                    const float value = distance + map_path_value;
+                    const float value = (distance * distance_cost_scaling) + map_path_value;
 
                     if (isnan(center_value) || value < center_value)
                     {
@@ -114,7 +115,8 @@ class PathDistanceFilter(PluginBase):
             dx = (last_point[0] - path_point_index[0]) * self.resolution
             dy = (last_point[1] - path_point_index[1]) * self.resolution
             sum_length = sum_length + math.sqrt((dx*dx) + (dy*dy))
-            self.path_map[path_point_index[0], path_point_index[1]] = sum_length
+            self.path_map[path_point_index[0],
+                          path_point_index[1]] = sum_length
             last_point = path_point_index
 
         cell_radius = math.ceil(self.params["radius"] / self.resolution)
@@ -122,6 +124,7 @@ class PathDistanceFilter(PluginBase):
             self.path_map,
             cp.int32(cell_radius),
             cp.float32(self.params["radius"]),
+            cp.float32(self.params["distance_cost_scaling"]),
             self.distances,
             size=(self.width * self.height),
         )
