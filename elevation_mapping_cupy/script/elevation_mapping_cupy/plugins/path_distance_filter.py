@@ -22,7 +22,7 @@ class PathDistanceFilter(PluginBase):
         self.path_map = cp.zeros((self.width, self.height))
 
         self.path_distance_kernel = cp.ElementwiseKernel(
-            in_params="raw U path_map, int32 radius, float32 max_distance, float32 max_path_index",
+            in_params="raw U path_map, int32 radius, float32 max_distance",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -69,8 +69,8 @@ class PathDistanceFilter(PluginBase):
                     }
 
                     const int idx = get_relative_map_idx(i, dx, dy, 0);
-                    const float map_path_index = path_map[idx];
-                    if (isnan(map_path_index))
+                    const float map_path_value = path_map[idx];
+                    if (isnan(map_path_value))
                     {
                       continue;
                     }
@@ -80,11 +80,9 @@ class PathDistanceFilter(PluginBase):
                     {
                       continue;
                     }
+                    const float value = distance + map_path_value;
 
-                    const float normalized_distance = distance / max_distance;
-                    const float value = normalized_distance + map_path_index;
-
-                    if (isnan(center_value) || center_value > value)
+                    if (isnan(center_value) || value < center_value)
                     {
                       center_value = value;
                     }
@@ -110,15 +108,20 @@ class PathDistanceFilter(PluginBase):
 
         self.path_map = cp.full((self.width, self.height), float('nan'))
 
-        for idx, path_point_index in enumerate(self.path):
-            self.path_map[path_point_index[0], path_point_index[1]] = float(len(self.path) - idx - 1)
+        sum_length = 0.0
+        last_point = self.path[-1]
+        for path_point_index in reversed(self.path):
+            dx = (last_point[0] - path_point_index[0]) * self.resolution
+            dy = (last_point[1] - path_point_index[1]) * self.resolution
+            sum_length = sum_length + math.sqrt((dx*dx) + (dy*dy))
+            self.path_map[path_point_index[0], path_point_index[1]] = sum_length
+            last_point = path_point_index
 
         cell_radius = math.ceil(self.params["radius"] / self.resolution)
         self.path_distance_kernel(
             self.path_map,
             cp.int32(cell_radius),
             cp.float32(self.params["radius"]),
-            cp.float32(len(self.path) - 1),
             self.distances,
             size=(self.width * self.height),
         )
