@@ -29,11 +29,25 @@ class GoalDistanceFilter(PluginBase):
         get_layer = lambda layer_name: plugin_layers[plugin_layer_names.index(layer_name)]
 
         distance_layer = get_layer("distance_filter_layer")
-        path_distance_layer = get_layer("path_distance_filter_layer")
-        goal_distance_layer = get_layer("goal_distance_filter_layer")
+        obstacle_angle_layer = get_layer("obstacle_angle_layer")
+        path_angle_layer = get_layer("path_angle_filter_layer")
 
-        self.costs = (distance_layer * self.params["obstacle_cost_scaling"]) \
-                   + (path_distance_layer * self.params["path_distance_cost_scaling"]) \
-                   + (goal_distance_layer * self.params["goal_distance_cost_scaling"])
+        obstacle_angle_nans = cp.isnan(obstacle_angle_layer)
+        mask = obstacle_angle_nans * path_angle_layer
+        masked_obstacle_angles = obstacle_angle_layer
+        masked_obstacle_angles[obstacle_angle_nans] = 0.0
+        masked_obstacle_angles = masked_obstacle_angles + mask
+
+        scaled_distance_costs = distance_layer * self.params["obstacle_cost_scaling"]
+        obstacle_angles_x = scaled_distance_costs * cp.cos(masked_obstacle_angles)
+        obstacle_angles_y = scaled_distance_costs * cp.sin(masked_obstacle_angles)
+
+        path_angles_x = cp.cos(path_angle_layer)
+        path_angles_y = cp.sin(path_angle_layer)
+
+        x_angles = ((scaled_distance_costs * obstacle_angles_x) + path_angles_x) / 2.0
+        y_angles = ((scaled_distance_costs * obstacle_angles_y) + path_angles_y) / 2.0
+
+        self.costs = cp.arctan2(y_angles, x_angles)
 
         return self.costs.copy()
