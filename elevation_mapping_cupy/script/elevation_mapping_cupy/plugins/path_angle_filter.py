@@ -7,7 +7,7 @@ from .plugin_manager import PluginBase
 
 
 class PathAngleFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: float = 2.0, distance_cost_scaling: float = 1.0, resolution: float = 0.05, **kwargs):
+    def __init__(self, cell_n: int = 100, radius: float = 2.0, distance_cost_scaling: float = 1.0, resolution: float = 0.05, midpoint: float = 0.5, steepness: float = 10.0, **kwargs):
         super().__init__()
 
         self.uses_path = True
@@ -15,6 +15,8 @@ class PathAngleFilter(PluginBase):
         self.params["radius"] = radius
         self.params["distance_cost_scaling"] = distance_cost_scaling
         self.resolution = resolution
+        self.params["midpoint"] = midpoint
+        self.params["steepness"] = steepness
 
         self.width = cell_n
         self.height = cell_n
@@ -23,7 +25,7 @@ class PathAngleFilter(PluginBase):
         self.path_map = cp.zeros((self.width, self.height))
 
         self.path_angle_kernel = cp.ElementwiseKernel(
-            in_params="raw U path_map, int32 radius, float32 max_distance, float32 distance_cost_scaling",
+            in_params="raw U path_map, int32 radius, float32 max_distance, float32 distance_cost_scaling, float32 midpoint, float32 steepness",
             out_params="raw U resultmap",
             preamble=string.Template(
                 """
@@ -79,7 +81,7 @@ class PathAngleFilter(PluginBase):
                     }
 
                     const float distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
-                    if (distance > max_distance)
+                    if (distance >= max_distance)
                     {
                       continue;
                     }
@@ -97,7 +99,20 @@ class PathAngleFilter(PluginBase):
 
                     min_valid_distance = distance;
 
-                    center_value = map_path_value;
+
+                    const float distance_normalized = distance / max_distance;
+
+                    const float scaling = 1.0F / ( 1.0F + exp(-steepness*(distance_normalized - midpoint)) );
+
+                    const float scaled_dx = dx * distance_cost_scaling * scaling;
+                    const float scaled_dy = dy * distance_cost_scaling * scaling;
+
+                    const float path_x = cos(map_path_value);
+                    const float path_y = sin(map_path_value);
+                    const float average_x = 0.5F * (path_x + scaled_dy);
+                    const float average_y = 0.5F * (path_y + scaled_dx);
+
+                    center_value = atan2(average_y, average_x);
                   }
                 }
 
@@ -143,6 +158,8 @@ class PathAngleFilter(PluginBase):
             cp.int32(cell_radius),
             cp.float32(self.params["radius"]),
             cp.float32(self.params["distance_cost_scaling"]),
+            cp.float32(self.params["midpoint"]),
+            cp.float32(self.params["steepness"]),
             self.angles,
             size=(self.width * self.height),
         )
