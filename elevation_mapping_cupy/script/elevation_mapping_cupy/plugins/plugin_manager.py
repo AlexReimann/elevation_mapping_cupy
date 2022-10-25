@@ -105,7 +105,7 @@ class PluginManger(object):
                 extra_params.append(v["extra_params"])
             else:
                 extra_params.append({})
-            if k == "distance_filter" or k == "goal_distance_filter" or k == "path_distance_filter" or k == "obstacle_angle_filter":
+            if k == "distance_filter" or k == "goal_distance_filter" or k == "path_distance_filter" or k == "obstacle_angle_filter" or k == "path_angle_filter":
                 extra_params[-1]["resolution"] = resolution
         self.init(plugin_params, extra_params)
         print("Loaded plugins are ", *self.plugin_names)
