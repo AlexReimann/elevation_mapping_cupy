@@ -139,17 +139,19 @@ class PathAngleFilter(PluginBase):
             self.path_map[self.path[0][0], self.path[0][1]] = cp.inf
 
         else:
-            last_point = self.path[0]
-            for path_point_index in self.path[1:-1]:
-                dx = (path_point_index[0] - last_point[0])
-                dy = (path_point_index[1] - last_point[1])
+            look_ahead = 10
+            max_index = len(self.path) - 1
+            for index, path_point_index in enumerate(self.path[:-1]):
+                front_point = self.path[min(max_index, index + look_ahead)]
+
+                dx = (front_point[0] - path_point_index[0])
+                dy = (front_point[1] - path_point_index[1])
 
                 if dx == 0 and dy == 0:
                     continue
 
                 self.path_map[path_point_index[0],
                               path_point_index[1]] = math.atan2(float(dy), float(dx))
-                last_point = path_point_index
 
 
         cell_radius = math.ceil(self.params["radius"] / self.resolution)
