@@ -128,7 +128,7 @@ class PathAngleFilter(PluginBase):
     def __call__(self, map: cp.ndarray, layer_names: List[str],
                  plugin_layers: cp.ndarray, plugin_layer_names: List[str]) -> cp.ndarray:
 
-        if self.path is None:
+        if self.path is None or len(self.path) == 0:
             return self.angles.copy()
 
 

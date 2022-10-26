@@ -22,8 +22,8 @@ class GoalDistanceFilter(PluginBase):
                  plugin_layers: cp.ndarray, plugin_layer_names: List[str]) -> cp.ndarray:
 
         if "distance_filter_layer" not in plugin_layer_names \
-          or "path_distance_filter_layer" not in plugin_layer_names \
-          or "goal_distance_filter_layer" not in plugin_layer_names:
+          or "obstacle_angle_layer" not in plugin_layer_names \
+          or "path_angle_filter_layer" not in plugin_layer_names:
             return self.costs
 
         get_layer = lambda layer_name: plugin_layers[plugin_layer_names.index(layer_name)]
@@ -45,8 +45,8 @@ class GoalDistanceFilter(PluginBase):
         path_angles_x = cp.cos(path_angle_layer)
         path_angles_y = cp.sin(path_angle_layer)
 
-        x_angles = ((scaled_distance_costs * obstacle_angles_x) + path_angles_x) / 2.0
-        y_angles = ((scaled_distance_costs * obstacle_angles_y) + path_angles_y) / 2.0
+        x_angles = (obstacle_angles_x + path_angles_x) / 2.0
+        y_angles = (obstacle_angles_y + path_angles_y) / 2.0
 
         self.costs = cp.arctan2(y_angles, x_angles)
 
