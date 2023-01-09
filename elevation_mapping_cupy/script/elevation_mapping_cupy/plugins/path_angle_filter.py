@@ -62,7 +62,8 @@ class PathAngleFilter(PluginBase):
                 """
                 U& center_value = resultmap[get_map_idx(i, 0)];
 
-                float min_valid_distance = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
+                int min_cell_distance = -1;
+                const int max_cell_distance = (int)(max_distance / ${resolution}) + 1;
 
                 for (int dy = -radius; dy <= radius; ++dy)
                 {
@@ -80,8 +81,8 @@ class PathAngleFilter(PluginBase):
                       continue;
                     }
 
-                    const float distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
-                    if (distance >= max_distance)
+                    const float cell_distance = (dy*dy) + (dx*dx);
+                    if (cell_distance >= (max_cell_distance * max_cell_distance))
                     {
                       continue;
                     }
@@ -92,13 +93,13 @@ class PathAngleFilter(PluginBase):
                       continue;
                     }
 
-                    if (distance >= min_valid_distance)
+                    if (min_cell_distance != -1 && cell_distance >= min_cell_distance)
                     {
                       continue;
                     }
+                    min_cell_distance = cell_distance;
 
-                    min_valid_distance = distance;
-
+                    const float distance = sqrt((float)min_cell_distance) * ${resolution};
 
                     const float distance_normalized = distance / max_distance;
 
