@@ -57,7 +57,8 @@ class DistanceFilter(PluginBase):
             ).substitute(width=self.width, height=self.height),
             operation=string.Template(
                 """
-                U& center_value = resultmap[get_map_idx(i, 0)];
+                int min_cell_distance = -1;
+                const int max_cell_distance = (int)(max_distance / ${resolution}) + 1;
 
                 for (int dy = -radius; dy <= radius; ++dy)
                 {
@@ -74,35 +75,37 @@ class DistanceFilter(PluginBase):
                       continue;
                     }
 
-                    const float distance = sqrt((float)(dy*dy) + (float)(dx*dx)) * ${resolution};
-                    if (distance > max_distance)
+                    const int distance = (dy*dy) + (dx*dx);
+                    if (distance > (max_cell_distance * max_cell_distance))
                     {
                       continue;
                     }
 
-                    if (isnan(center_value) || center_value > distance)
+                    if (min_cell_distance == -1 || min_cell_distance > distance)
                     {
-                      center_value = distance;
+                      min_cell_distance = distance;
                     }
                   }
                 }
 
-                if (center_value < min_distance)
+                const float distance = sqrt((float)min_cell_distance) * ${resolution};
+
+                if (min_cell_distance == -1)
                 {
-                  center_value = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
+                  resultmap[get_map_idx(i, 0)] = 0.0F;
                 }
-                else if (isnan(center_value))
+                else if (distance < min_distance)
                 {
-                  center_value = 0.0F;
+                  resultmap[get_map_idx(i, 0)] = 1.0F / 0.0F; // Results in inf. Including math.h doesn't work
                 }
                 else
                 {
                   const float distance_range = max_distance - min_distance;
-                  const float normalized_distance = (center_value - min_distance) / distance_range;
+                  const float normalized_distance = (distance - min_distance) / distance_range;
 
                   const float midpoint = 0.4F;
                   const float steepness = 10.0F;
-                  center_value = 1.0F - (1.0F / ( 1.0F + exp(-steepness*(normalized_distance - midpoint)) ));
+                  resultmap[get_map_idx(i, 0)] = 1.0F - (1.0F / ( 1.0F + exp(-steepness*(normalized_distance - midpoint)) ));
                 }
                 """
             ).substitute(resolution=self.resolution),
