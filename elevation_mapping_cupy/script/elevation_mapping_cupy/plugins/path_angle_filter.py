@@ -7,12 +7,15 @@ from .plugin_manager import PluginBase
 
 
 class PathAngleFilter(PluginBase):
-    def __init__(self, cell_n: int = 100, radius: float = 2.0, distance_cost_scaling: float = 1.0, resolution: float = 0.05, midpoint: float = 0.5, steepness: float = 10.0, **kwargs):
+    def __init__(self, cell_n: int = 100, radius: float = 2.0, lookahead: int = 10,
+                 distance_cost_scaling: float = 1.0, resolution: float = 0.05,
+                 midpoint: float = 0.5, steepness: float = 10.0, **kwargs):
         super().__init__()
 
         self.uses_path = True
 
         self.params["radius"] = radius
+        self.params["lookahead"] = lookahead
         self.params["distance_cost_scaling"] = distance_cost_scaling
         self.resolution = resolution
         self.params["midpoint"] = midpoint
@@ -140,10 +143,9 @@ class PathAngleFilter(PluginBase):
             self.path_map[self.path[0][0], self.path[0][1]] = cp.inf
 
         else:
-            look_ahead = 10
             max_index = len(self.path) - 1
             for index, path_point_index in enumerate(self.path[:-1]):
-                front_point = self.path[min(max_index, index + look_ahead)]
+                front_point = self.path[min(max_index, index + self.params["lookahead"])]
 
                 dx = (front_point[0] - path_point_index[0])
                 dy = (front_point[1] - path_point_index[1])

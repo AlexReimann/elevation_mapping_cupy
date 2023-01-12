@@ -223,9 +223,12 @@ void ElevationMappingNode::reconfigureCostsCallback(CostsConfig& config, uint32_
     break;
 
   case 30:
-    map_.update_parameter("path_angle_filter", "midpoint", config.path_angle_func_midpoint);
+    map_.update_parameter("path_angle_filter", "lookahead", config.path_angle_lookahead);
     break;
   case 31:
+    map_.update_parameter("path_angle_filter", "midpoint", config.path_angle_func_midpoint);
+    break;
+  case 32:
     map_.update_parameter("path_angle_filter", "steepness", config.path_angle_func_steepness);
     break;
 
