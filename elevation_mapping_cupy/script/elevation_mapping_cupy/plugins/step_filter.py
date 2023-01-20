@@ -53,13 +53,21 @@ class SetpFilter(PluginBase):
                 """
                 U center_value = map[get_map_idx(i, 0)];
 
+                if (isnan(center_value))
+                {
+                  return;
+                }
+
                 U max_distance = 0.0;
                 for (int dy = -${radius}; dy <= ${radius}; ++dy)
                 {
                   for (int dx = -${radius}; dx <= ${radius}; ++dx)
                   {
                     int idx = get_relative_map_idx(i, dx, dy, 0);
-                    if (!is_inside(idx))
+                    U neighbor_value = map[idx];
+                    const int variance_idx = get_relative_map_idx(i, dx, dy, 2);
+                    U variance = map[variance_idx];
+                    if (!is_inside(idx) || isnan(neighbor_value) || variance > 1000.0)
                     {
                       continue;
                     }
@@ -87,12 +95,10 @@ class SetpFilter(PluginBase):
     def __call__(self, map: cp.ndarray, layer_names: List[str],
                  plugin_layers: cp.ndarray, plugin_layer_names: List[str]) -> cp.ndarray:
 
-        elevation_idx = layer_names.index('elevation')
-
-        self.step_filtered = map[elevation_idx].copy()
+        self.step_filtered = cp.zeros((self.width, self.height))
 
         self.step_filter_kernel(
-            map[elevation_idx],
+            map,
             self.step_filtered,
             size=(self.width * self.height),
         )
