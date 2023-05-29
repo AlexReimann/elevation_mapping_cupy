@@ -7,7 +7,6 @@ import numpy as np
 import threading
 import subprocess
 
-from .traversability_filter import get_filter_chainer, get_filter_torch
 from .parameter import Parameter
 from .custom_kernels import add_points_kernel
 from .custom_kernels import error_counting_kernel
@@ -83,11 +82,16 @@ class ElevationMap(object):
         weight_file = subprocess.getoutput('echo "' + param.weight_file + '"')
         param.load_weights(weight_file)
 
-        if param.use_chainer:
-            self.traversability_filter = get_filter_chainer(param.w1, param.w2, param.w3, param.w_out)
+        if param.enable_traversability:
+            if param.use_chainer:
+                from .traversability_filter import get_filter_chainer
+                self.traversability_filter = get_filter_chainer(param.w1, param.w2, param.w3, param.w_out)
+            else:
+                from .traversability_filter import get_filter_torch
+                self.traversability_filter = get_filter_torch(param.w1, param.w2, param.w3, param.w_out)
+            self.untraversable_polygon = xp.zeros((1, 2))
         else:
-            self.traversability_filter = get_filter_torch(param.w1, param.w2, param.w3, param.w_out)
-        self.untraversable_polygon = xp.zeros((1, 2))
+            print("Running without traversability filter")
 
         # Plugins
         self.plugin_manager = PluginManger(cell_n=self.cell_n)
@@ -265,23 +269,25 @@ class ElevationMap(object):
             if self.param.enable_overlap_clearance:
                 self.clear_overlap_map(t)
 
-            # dilation before traversability_filter
-            self.traversability_input *= 0.0
-            self.dilation_filter_kernel(
-                self.elevation_map[5],
-                self.elevation_map[2] + self.elevation_map[6],
-                self.traversability_input,
-                self.traversability_mask_dummy,
-                size=(self.cell_n * self.cell_n),
-            )
-            # calculate traversability
-            traversability = self.traversability_filter(self.traversability_input)
-            self.elevation_map[3][3:-3, 3:-3] = traversability.reshape(
-                (traversability.shape[2], traversability.shape[3])
-            )
+            if self.param.enable_traversability:
+                # dilation before traversability_filter
+                self.traversability_input *= 0.0
+                self.dilation_filter_kernel(
+                    self.elevation_map[5],
+                    self.elevation_map[2] + self.elevation_map[6],
+                    self.traversability_input,
+                    self.traversability_mask_dummy,
+                    size=(self.cell_n * self.cell_n),
+                )
+                # calculate traversability
+                traversability = self.traversability_filter(self.traversability_input)
+                self.elevation_map[3][3:-3, 3:-3] = traversability.reshape(
+                    (traversability.shape[2], traversability.shape[3])
+                )
 
-        # calculate normal vectors
-        self.update_normal(self.traversability_input)
+        if self.param.enable_traversability:
+            # calculate normal vectors
+            self.update_normal(self.traversability_input)
 
     def clear_overlap_map(self, t):
         # Clear overlapping area around center

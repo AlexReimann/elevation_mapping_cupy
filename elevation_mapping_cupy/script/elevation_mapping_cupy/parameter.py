@@ -55,6 +55,7 @@ class Parameter:
     enable_visibility_cleanup: bool = True
     enable_overlap_clearance: bool = True
     use_only_above_for_upper_bound: bool = True
+    enable_traversability: bool = True
     use_chainer: bool = True
     position_noise_thresh: float = 0.1
     orientation_noise_thresh: float = 0.1
