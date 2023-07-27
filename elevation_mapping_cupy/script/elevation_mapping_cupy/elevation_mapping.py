@@ -251,8 +251,11 @@ class ElevationMap(object):
             ):
                 self.mean_error = error / error_cnt
                 self.additive_mean_error += self.mean_error
+                print("[GPU elevation mapping] Drift error: {}".format(self.mean_error))
                 if np.abs(self.mean_error) < self.param.max_drift:
-                    self.elevation_map[0] += self.mean_error * self.param.drift_compensation_alpha
+                    drift_compensation = self.mean_error * self.param.drift_compensation_alpha
+                    print("[GPU elevation mapping] Applying drift compensation: {}".format(drift_compensation))
+                    self.elevation_map[0] += drift_compensation
             self.add_points_kernel(
                 points,
                 cp.array([0.0]),
